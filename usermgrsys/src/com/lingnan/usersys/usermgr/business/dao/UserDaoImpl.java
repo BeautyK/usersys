@@ -72,6 +72,12 @@ public class UserDaoImpl implements UserDao{
 		return user;
 	}
 	
+	/**
+	 * 注册或添加用户的方法
+	 * 
+	 * @param user 用户信息
+	 * @return 成功放回true，失败返回false
+	 */
 	public boolean addUser(UserVO user){
 		Boolean flag = false;
 		int count = 0;
@@ -120,18 +126,68 @@ public class UserDaoImpl implements UserDao{
 		return maxId;
 	}
 
-
-	@Override
+	/**
+	 * 根据id查询用户
+	 * @param id
+	 * @return 返回该id用户的信息
+	 */
 	public UserVO findUserById(String id) {
-		// TODO Auto-generated method stub
-		return null;
+		PreparedStatement prep = null;
+		ResultSet rs = null;
+		UserVO user = new UserVO();
+		try {
+			String sql = "select * from t_users where userID = ?";
+			prep = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			prep.setString(1, id);
+			rs = prep.executeQuery();
+			if(rs.first()){
+				user.setId(Integer.parseInt(rs.getString(1)));
+				user.setUserId(rs.getString(2));
+				user.setName(rs.getString(3));
+				user.setPassword(rs.getString(4));
+				user.setPowers(rs.getString(5));
+				user.setEmail(rs.getString(6));
+				user.setBirth(rs.getDate(7));
+				user.setStatus(rs.getString(8));
+			}else {
+				throw new ServiceException("没有此ID的用户！");
+			}		
+		} catch (SQLException e) {
+			throw new DaoException("sql语句出错", e);
+		}finally{
+			DBUtils.closeStatement(rs, prep);
+		}
+		return user;
 	}
 
 
-	@Override
+	/**
+	 * 修改用户信息的方法
+	 * 
+	 * @param user
+	 * @return
+	 */
 	public boolean updateUser(UserVO user) {
-		// TODO Auto-generated method stub
-		return false;
+		Boolean flag = false;
+		int count = 0;
+		PreparedStatement prep = null;
+		try {
+			String sql = "update t_user set name=? ,email=?, birth=? where userid=?";
+			prep = conn.prepareStatement(sql);			
+			prep.setString(1, user.getName());			
+			prep.setString(2, user.getEmail());
+			prep.setDate(3, (Date) user.getBirth());
+			prep.setString(4, user.getUserId());
+			count = prep.executeUpdate();
+			if (count > 0) {
+				flag = true ;
+			}
+		} catch (SQLException e) {
+			throw new DaoException("SQL语句出错!", e);
+		} finally {
+			DBUtils.closeStatement(prep);
+		}	
+		return flag;
 	}
 	
 }
