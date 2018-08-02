@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 
 import java.sql.Statement;
+import java.util.Vector;
 
 import com.lingnan.usersys.common.exception.DaoException;
 import com.lingnan.usersys.common.exception.ServiceException;
@@ -65,7 +66,7 @@ public class UserDaoImpl implements UserDao{
 				throw new ServiceException("登录失败，用户ID或密码错误");
 			}		
 		} catch (SQLException e) {
-			throw new DaoException("sql语句出错", e);
+			throw new DaoException("sql语句出错:"+e.getMessage(), e);
 		}finally{
 			DBUtils.closeStatement(rs, prep);
 		}
@@ -98,7 +99,7 @@ public class UserDaoImpl implements UserDao{
 				flag = true ;
 			}
 		} catch (SQLException e) {
-			throw new DaoException("SQL语句出错!", e);
+			throw new DaoException("SQL语句出错:"+e.getMessage(), e);
 		} finally {
 			DBUtils.closeStatement(prep);
 		}	
@@ -121,7 +122,9 @@ public class UserDaoImpl implements UserDao{
 			rs.next();
 			maxId = rs.getInt(1);
 		} catch (SQLException e) {
-			throw new DaoException("sql语句出错！", e);
+			throw new DaoException("sql语句出错:"+e.getMessage(), e);
+		} finally{
+			DBUtils.closeStatement(rs, stmt);
 		}	
 		return maxId;
 	}
@@ -136,7 +139,7 @@ public class UserDaoImpl implements UserDao{
 		ResultSet rs = null;
 		UserVO user = new UserVO();
 		try {
-			String sql = "select * from t_users where userID = ?";
+			String sql = "select * from t_users where ID = ?";
 			prep = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			prep.setString(1, id);
 			rs = prep.executeQuery();
@@ -150,10 +153,11 @@ public class UserDaoImpl implements UserDao{
 				user.setBirth(rs.getDate(7));
 				user.setStatus(rs.getString(8));
 			}else {
-				throw new ServiceException("没有此ID的用户！");
+				user = null;
+				//throw new ServiceException("没有此ID的用户！");
 			}		
 		} catch (SQLException e) {
-			throw new DaoException("sql语句出错", e);
+			throw new DaoException("sql语句出错"+e.getMessage(), e);
 		}finally{
 			DBUtils.closeStatement(rs, prep);
 		}
@@ -164,30 +168,159 @@ public class UserDaoImpl implements UserDao{
 	/**
 	 * 修改用户信息的方法
 	 * 
-	 * @param user
-	 * @return
+	 * @param user 修改后的用户信息
+	 * @return 修改成功返回true，失败返回false
 	 */
 	public boolean updateUser(UserVO user) {
 		Boolean flag = false;
 		int count = 0;
 		PreparedStatement prep = null;
 		try {
-			String sql = "update t_user set name=? ,email=?, birth=? where userid=?";
+			String sql = "update t_users set name=?,mail=?,birth=?,password=?,powers=? where id=?";
 			prep = conn.prepareStatement(sql);			
-			prep.setString(1, user.getName());			
+			prep.setString(1, user.getName());
 			prep.setString(2, user.getEmail());
 			prep.setDate(3, (Date) user.getBirth());
-			prep.setString(4, user.getUserId());
+			prep.setString(4, user.getPassword());
+			prep.setString(5, user.getPowers());
+			prep.setInt(6, user.getId());
 			count = prep.executeUpdate();
 			if (count > 0) {
 				flag = true ;
 			}
 		} catch (SQLException e) {
-			throw new DaoException("SQL语句出错!", e);
+			throw new DaoException("SQL语句出错:"+e.getMessage(), e);
 		} finally {
 			DBUtils.closeStatement(prep);
 		}	
 		return flag;
+	}
+
+
+	/**
+	 * 根据id删除用户信息
+	 * @param id 需要删除的用户的id
+	 * @return 删除成功返回true，删除失败返回false
+	 */
+	public boolean deleteUser(String id) {
+		Statement stmt = null;
+		ResultSet rs = null;
+		boolean flag = false;
+		String sql = "delete from t_users where id='"+id+"'";
+		try {
+			stmt = conn.createStatement();
+			if (stmt.executeUpdate(sql) > 0) {
+				flag = true;
+			} 			
+		} catch (SQLException e) {
+			throw new DaoException("SQL语句出错:"+e.getMessage(), e);
+		} finally {
+			DBUtils.closeStatement(stmt);
+		}
+		return flag;
+	}
+
+	/**
+	 * 查询所有用户
+	 * @return 结果集
+	 */
+	public Vector<UserVO> findAll() {
+		Statement stmt = null;
+		ResultSet rs = null;
+		Vector<UserVO> v = new Vector<UserVO>();
+		try {
+			String sql = "select * from t_users";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				UserVO user = new UserVO();
+				user.setId(Integer.parseInt(rs.getString(1)));
+				user.setUserId(rs.getString(2));
+				user.setName(rs.getString(3));
+				user.setPassword(rs.getString(4));
+				user.setPowers(rs.getString(5));
+				user.setEmail(rs.getString(6));
+				user.setBirth(rs.getDate(7));
+				user.setStatus(rs.getString(8));
+				v.add(user);
+			}	
+		} catch (SQLException e) {
+			throw new DaoException("sql语句出错"+e.getMessage(), e);
+		}finally{
+			DBUtils.closeStatement(rs, stmt);
+		}
+		return v;
+	}
+
+	/**
+	 * 根据名字查询用户
+	 * @param name 需要根据name查找的关键字符串
+	 * @return 返回名字包含该字符串的用户信息
+	 */
+	public Vector<UserVO> findUserByName(String name) {
+		Statement stmt = null;
+		ResultSet rs = null;
+		Vector<UserVO> v = new Vector<UserVO>();
+		try {
+			String sql = "select * from t_users where name like '%"+name+"%'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				UserVO user = new UserVO();
+				user.setId(Integer.parseInt(rs.getString(1)));
+				user.setUserId(rs.getString(2));
+				user.setName(rs.getString(3));
+				user.setPassword(rs.getString(4));
+				user.setPowers(rs.getString(5));
+				user.setEmail(rs.getString(6));
+				user.setBirth(rs.getDate(7));
+				user.setStatus(rs.getString(8));
+				v.add(user);
+			}	
+		} catch (SQLException e) {
+			throw new DaoException("sql语句出错"+e.getMessage(), e);
+		}finally{
+			DBUtils.closeStatement(rs, stmt);
+		}
+		return v;
+	}
+
+
+	/**
+	 * 分页查询全部用户
+	 * @return 返回指定页的用户信息
+	 */
+	public Vector<UserVO> findUsers(int page) {
+		Statement stmt = null;
+		ResultSet rs = null;
+		Vector<UserVO> v = new Vector<UserVO>();
+		try {
+			String sql = "select * from (select rownum rn,A.* from "
+					+ "(select *  from t_users order by id)A "
+					+ ")B where B.rn>("+page+"-1)*5 and B.rn<= "+page+"*5";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(sql);
+			while (rs.next()) {
+				UserVO user = new UserVO();
+				user.setId(Integer.parseInt(rs.getString(2)));
+				user.setUserId(rs.getString(3));
+				user.setName(rs.getString(4));
+				user.setPassword(rs.getString(5));
+				user.setPowers(rs.getString(6));
+				user.setEmail(rs.getString(7));
+				user.setBirth(rs.getDate(8));
+				user.setStatus(rs.getString(9));
+				v.add(user);
+			}
+			if (v.size() == 0) {
+				v=null;
+			}
+		} catch (SQLException e) {
+			throw new DaoException("sql语句出错"+e.getMessage(), e);
+		}finally{
+			DBUtils.closeStatement(rs, stmt);
+		}
+		return v;
 	}
 	
 }

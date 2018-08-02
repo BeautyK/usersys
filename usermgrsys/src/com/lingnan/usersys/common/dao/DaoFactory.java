@@ -15,8 +15,8 @@ public class DaoFactory {
 	/**
 	 * 获得用户dao对象的工厂方法
 	 * 
-	 * @param conn
-	 * @param type
+	 * @param conn 数据库连接对象
+	 * @param type dao类型
 	 * @return 实例化的dao对象
 	 */
 	public static BaseDao getDao(Connection conn, String type) {

@@ -25,18 +25,16 @@ public class DBUtils {
 		try {
 			String user = "scott";//用户名
 			String password = "root";//密码
+			//加载oracle的JDBC驱动程序
 			Class.forName("oracle.jdbc.driver.OracleDriver");
+			//建立驱动程序与数据库之间的连接
 			conn = DriverManager.getConnection
 					("jdbc:oracle:thin:@localhost:1521:orcl",user,password);
 		} catch (ClassNotFoundException e) {
-			//System.out.println("驱动加载失败！");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("驱动加载失败！", e);
 		} 
 		catch (SQLException e) {
-			//System.out.println("数据库连接失败！");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("数据库连接失败！", e);
 		}		
@@ -52,8 +50,6 @@ public class DBUtils {
 		try {
 			conn.close();
 		} catch (SQLException e) {
-			//System.out.println("连接关闭失败！");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("连接关闭失败！", e);
 		}		
@@ -62,15 +58,13 @@ public class DBUtils {
 	/**
 	 * 开启事务的方法
 	 * 
-	 * @param conn 
+	 * @param conn 数据库连接对象
 	 */
 	public static void beginTransaction(Connection conn) {
 		try {
 			//将事务的自动提交模式设为假
 			conn.setAutoCommit(false);
 		} catch (SQLException e) {
-			//System.out.println("事务开启失败");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("事务开启失败！", e);
 		}
@@ -79,7 +73,7 @@ public class DBUtils {
 	/**
 	 * 提交事务的方法
 	 * 
-	 * @param conn
+	 * @param conn 数据库连接对象
 	 */
 	public static void commit(Connection conn) {
 		try {
@@ -88,8 +82,6 @@ public class DBUtils {
 			//将事务的自动提交设为真
 			conn.setAutoCommit(true);
 		} catch (SQLException e) {
-			//System.out.println("事务提交失败！");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("事务提交失败！", e);
 		}
@@ -98,17 +90,15 @@ public class DBUtils {
 	/**
 	 * 回滚事务的方法
 	 * 
-	 * @param conn
+	 * @param conn 数据库连接对象
 	 */
-	public static void rollbacl(Connection conn) {
+	public static void rollbacK(Connection conn) {
 		try {
 			//回滚事务
 			conn.rollback();
 			//将事务的自动提交设为真
 			conn.setAutoCommit(true);
 		} catch (SQLException e) {
-			//System.out.println("事务回滚失败！");
-			//e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("事务回滚失败！", e);
 		}
@@ -117,8 +107,8 @@ public class DBUtils {
 	/**
 	 * 关闭声明对象的方法
 	 * 
-	 * @param rs
-	 * @param stmt
+	 * @param rs 需关闭的结果集
+	 * @param stmt 需关闭的声明对象
 	 */
 	public static void closeStatement(ResultSet rs, Statement stmt) {	
 	    try {
@@ -131,8 +121,6 @@ public class DBUtils {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			//System.out.println("声明对象关闭失败！");
-		    //e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("声明对象关闭失败！", e);
 		}		
@@ -141,7 +129,7 @@ public class DBUtils {
 	/**
 	 * 关闭声明对象的方法
 	 * 
-	 * @param stmt
+	 * @param stmt 需关闭的声明对象
 	 */
 	public static void closeStatement(Statement stmt) {	
 	    try {
@@ -150,8 +138,6 @@ public class DBUtils {
 				stmt.close();
 			}
 		} catch (SQLException e) {
-			//System.out.println("声明对象关闭失败！");
-		    //e.printStackTrace();
 			//将异常封装为自定义异常类
 			throw new DaoException("声明对象关闭失败！", e);
 		}		
